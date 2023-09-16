@@ -1,0 +1,25 @@
+definitions:
+  internal_controller.healthCheckResponse:
+    properties:
+      message:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/health-check:
+    get:
+      consumes:
+      - application/json
+      description: health check
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_controller.healthCheckResponse'
+      summary: health check
+      tags:
+      - common
+swagger: "2.0"

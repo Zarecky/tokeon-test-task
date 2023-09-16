@@ -1,0 +1,9 @@
+.env
+.build
+.vscode
+.netrc
+go.work
+go.work.sum
+.idea/
+.tmp
+.docker
