@@ -1,62 +1,12 @@
 version: "3.8"
 
-volumes:
-  pg_data:
-    driver: local
-
-networks:
-  glideblox:
-    driver: bridge
-    name: glideblox
-    attachable: true
 
 services:
-  # app: 
-  #   container_name: glideblox_app
-  #   build: .
-  #   restart: on-failure
-  #   env_file:
-  #     - .env
-  #   ports:
-  #     - "8080:8080"
-  #   networks:
-  #     - glideblox
-  #   depends_on:
-  #     - redis
-  #     - postgres
-
-  redis:
-    container_name: glideblox_redis
-    image: "redis:latest"
-    restart: always
-    command: ["redis-server", "--bind", "0.0.0.0", "--port", "6379"]
-    ports:
-      - "6378:6379"
-    volumes:
-      - ./docker/redis/redis-data:/var/lib/redis
-    #  - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
-    networks:
-      - glideblox
-
-  postgres:
-    container_name: glideblox_postgres
-    image: postgres:15-alpine
-    user: postgres
-    volumes:
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-      - pg_data:/var/lib/postgresql/data
+  app: 
+    container_name: tokeon_app
+    build: .
     restart: on-failure
-    environment:
-      POSTGRES_USER: "postgres"
-      POSTGRES_DB: "glideblox"
-      POSTGRES_PASSWORD: "postgres"
+    env_file:
+      - .env
     ports:
-      - "5433:5432"
-    healthcheck:
-      test: /usr/bin/pg_isready
-      interval: 5s
-      timeout: 10s
-      retries: 120
-    networks:
-      - glideblox
+      - "8080:8080"

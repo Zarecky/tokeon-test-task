@@ -1,4 +1,4 @@
-package controller
+package controllers
 
 import (
 	"net/http"
@@ -15,14 +15,10 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-type CommonController interface {
-	HealthCheck() fiber.Handler
-}
+type Common struct{}
 
-type commonController struct{}
-
-func NewCommonController() CommonController {
-	return &commonController{}
+func NewCommon() *Common {
+	return &Common{}
 }
 
 type healthCheckResponse struct {
@@ -38,7 +34,7 @@ type healthCheckResponse struct {
 //	@Produce		json
 //	@Success		200	{object}	healthCheckResponse
 //	@Router			/api/v1/health-check [get]
-func (c *commonController) HealthCheck() fiber.Handler {
+func (c *Common) HealthCheck() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		c.SendStatus(http.StatusOK)
 		return c.JSON(healthCheckResponse{Message: "Hello World"})

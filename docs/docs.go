@@ -32,15 +32,89 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_controller.healthCheckResponse"
+                            "$ref": "#/definitions/internal_controllers.healthCheckResponse"
                         }
+                    }
+                }
+            }
+        },
+        "/api/v1/send": {
+            "post": {
+                "description": "send message to the device with id in body or to lthe all devices if id is not provided in body",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sender"
+                ],
+                "summary": "send message to the devices",
+                "parameters": [
+                    {
+                        "description": "Data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_controllers.SendBodyDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/ws/{id}": {
+            "get": {
+                "description": "open connect via websocket",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device"
+                ],
+                "summary": "open connect via websocket",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Unique id of the connecting device",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     }
                 }
             }
         }
     },
     "definitions": {
-        "internal_controller.healthCheckResponse": {
+        "internal_controllers.SendBodyDto": {
+            "type": "object",
+            "required": [
+                "text"
+            ],
+            "properties": {
+                "device_id": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_controllers.healthCheckResponse": {
             "type": "object",
             "properties": {
                 "message": {

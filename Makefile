@@ -1,13 +1,10 @@
 -include .env
 
-MIGRATIONS_DIR   = ./sql/migrations/
 SHELL            := /bin/sh
 GOBIN            ?= $(GOPATH)/bin
 PATH             := $(GOBIN):$(PATH)
 GO               = go
 TARGET_DIR       ?= $(PWD)/.build
-POSTGRES_DSN_SSL	 = postgres://$(POSTGRES_USER):$(POSTGRES_PASS)@$(POSTGRES_ADDR)/$(POSTGRES_DB_NAME)
-POSTGRES_DSN	 = $(POSTGRES_DSN_SSL)?sslmode=disable
 
 ifeq ($(DELVE_ENABLED),true)
 GCFLAGS	= -gcflags 'all=-N -l'
@@ -40,23 +37,6 @@ watch: ## Run binaries that rebuild themselves on changes
 
 genswagger:
 	swag init -g /cmd/app/main.go --parseDependency --parseInternal
-
-gensql:
-	pgxgen crud -c "$(POSTGRES_DSN)"
-	pgxgen sqlc generate
-
-migrate:
-	migrate -path "$(MIGRATIONS_DIR)" -database "$(POSTGRES_DSN_SSL)" $(filter-out $@,$(MAKECMDGOALS))
-
-migrate-local:
-	migrate -path "$(MIGRATIONS_DIR)" -database "$(POSTGRES_DSN)" $(filter-out $@,$(MAKECMDGOALS))
-
-db-create-migration:
-	migrate create -ext sql -dir "$(MIGRATIONS_DIR)" $(filter-out $@,$(MAKECMDGOALS))
-
-gensql:
-	pgxgen crud
-	pgxgen sqlc generate
 
 compose:
 	docker compose up -d

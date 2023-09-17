@@ -7,19 +7,16 @@ import (
 	"time"
 
 	"tokeon-test-task/internal/config"
-	"tokeon-test-task/internal/controller"
+	"tokeon-test-task/internal/controllers"
 	"tokeon-test-task/internal/middleware"
-	"tokeon-test-task/internal/repos"
 	"tokeon-test-task/internal/services"
-	"tokeon-test-task/pkg/cache"
 	"tokeon-test-task/pkg/hc"
 	"tokeon-test-task/pkg/log"
-	"tokeon-test-task/pkg/postgres"
 
+	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/redis/go-redis/v9"
 )
 
 type Server struct {
@@ -28,14 +25,10 @@ type Server struct {
 
 	hc *hc.Server
 
-	db    *postgres.PostgreSQL
-	redis *redis.Client
-
 	app *fiber.App
 
 	// Dependencies
-	repos    repos.Repos
-	services services.Services
+	services *services.Services
 }
 
 func New(logger log.Logger, cfg *config.Config) (*Server, error) {
@@ -49,11 +42,6 @@ func New(logger log.Logger, cfg *config.Config) (*Server, error) {
 
 func (s *Server) Start(ctx context.Context) error {
 	defer s.Stop()
-
-	// Init db
-	if err := s.initDB(ctx); err != nil {
-		return fmt.Errorf("failed to init db: %w", err)
-	}
 
 	// Init internal services
 	if err := s.initInternalServices(ctx); err != nil {
@@ -100,15 +88,9 @@ func (s *Server) startHealthCheckServer() {
 }
 
 func (s *Server) initInternalServices(ctx context.Context) error {
-	// init cache
-	cache := cache.New(s.redis)
-
-	// Init repositories
-	s.repos = repos.New(s.logger, s.db, cache)
-
 	// Init services
 	var err error
-	s.services, err = services.New(s.logger, s.config, s.repos, cache)
+	s.services, err = services.New(s.logger, s.config)
 	if err != nil {
 		return fmt.Errorf("failed to init services: %w", err)
 	}
@@ -121,7 +103,7 @@ func (s *Server) initInternalServices(ctx context.Context) error {
 		EnableSplittingOnParsers:     true,
 		DisableStartupMessage:        true,
 		Immutable:                    true,
-		ErrorHandler:                 mw.ErrorHandler(s.logger),
+		ErrorHandler:                 mw.ErrorHandler(),
 		StreamRequestBody:            true,
 		DisablePreParseMultipartForm: true,
 		BodyLimit:                    5 * 1024 * 1024 * 1024,
@@ -130,7 +112,7 @@ func (s *Server) initInternalServices(ctx context.Context) error {
 	s.app.Use(recover.New(recover.Config{
 		EnableStackTrace: true,
 	}))
-	s.app.Use(mw.Logger(s.logger))
+	s.app.Use(mw.Logger())
 
 	if s.config.EnvCI == "local" {
 		s.app.Use(cors.New(cors.Config{
@@ -151,12 +133,15 @@ func (s *Server) initInternalServices(ctx context.Context) error {
 		}))
 	}
 
+	validator := validator.New()
+
 	// init and apply controllers
-	commonController := controller.NewCommonController()
+	controllers := controllers.New(s.logger, validator, s.services.Device(), s.services.Device())
 
 	s.applyRoutes(
+		ctx,
 		mw,
-		commonController,
+		controllers,
 	)
 
 	// start rest api server

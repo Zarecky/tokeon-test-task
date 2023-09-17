@@ -1,14 +1,10 @@
 package middleware
 
 import (
-	"errors"
 	"fmt"
-	"tokeon-test-task/internal/repos/common"
+	"slices"
 
-	"tokeon-test-task/pkg/customerror"
-
-	"tokeon-test-task/pkg/log"
-	"tokeon-test-task/pkg/utils"
+	"tokeon-test-task/internal/errors"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -17,7 +13,7 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-func (m *Middleware) ErrorHandler(logger log.Logger) fiber.ErrorHandler {
+func (m *Middleware) ErrorHandler() fiber.ErrorHandler {
 	return func(ctx *fiber.Ctx, err error) error {
 		// Status code defaults to 500
 		code := fiber.StatusInternalServerError
@@ -25,46 +21,21 @@ func (m *Middleware) ErrorHandler(logger log.Logger) fiber.ErrorHandler {
 			Error: "Internal server error",
 		}
 
-		e1, ok := err.(customerror.ForbiddenError)
+		e0, ok := err.(*fiber.Error)
 		if ok {
-			code = fiber.StatusForbidden
+			code = e0.Code
 			response = ErrorResponse{
-				Error: e1.Message,
-			}
-		}
-
-		e2, ok := err.(customerror.BadRequestError)
-		if ok {
-			code = fiber.StatusBadRequest
-			response = ErrorResponse{
-				Error: e2.Message,
+				Error: e0.Message,
 			}
 		}
 
 		badRequestErrors := []error{
-			common.ErrEmptyID,
+			errors.ErrDeviceAlreadyRegistered,
+			errors.ErrDeviceNotFound,
 		}
-		existError := utils.Contains(badRequestErrors, err, func(v1, v2 error) bool {
-			return errors.Is(v1, v2)
-		})
 
-		if existError {
+		if slices.Contains(badRequestErrors, err) {
 			code = fiber.StatusBadRequest
-			response = ErrorResponse{
-				Error: err.Error(),
-			}
-		}
-
-		notFoundErrors := []error{
-			common.ErrNotFound,
-		}
-
-		existError = utils.Contains(notFoundErrors, err, func(v1, v2 error) bool {
-			return errors.Is(v1, v2)
-		})
-
-		if existError {
-			code = fiber.StatusNotFound
 			response = ErrorResponse{
 				Error: err.Error(),
 			}
@@ -76,9 +47,9 @@ func (m *Middleware) ErrorHandler(logger log.Logger) fiber.ErrorHandler {
 
 		switch {
 		case code >= 500:
-			logger.With(loggerExtendedFields...).Error(errText)
+			m.logger.With(loggerExtendedFields...).Error(errText)
 		case code >= 400:
-			logger.With(loggerExtendedFields...).Warn(errText)
+			m.logger.With(loggerExtendedFields...).Warn(errText)
 		}
 
 		// Set Content-Type: text/plain; charset=utf-8

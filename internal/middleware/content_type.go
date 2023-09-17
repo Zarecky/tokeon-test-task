@@ -1,8 +1,6 @@
 package middleware
 
 import (
-	"tokeon-test-task/pkg/customerror"
-
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -12,6 +10,6 @@ func (m *Middleware) ApplicationJsonContentType() fiber.Handler {
 			return ctx.Next()
 		}
 
-		return customerror.BadRequestError{Message: "Require content types: application/josn"}
+		return fiber.NewError(fiber.StatusBadRequest, "Require content types: application/josn")
 	}
 }

@@ -1,8 +1,9 @@
 package server
 
 import (
+	"context"
 	docs "tokeon-test-task/docs"
-	"tokeon-test-task/internal/controller"
+	"tokeon-test-task/internal/controllers"
 	"tokeon-test-task/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
@@ -10,8 +11,9 @@ import (
 )
 
 func (s *Server) applyRoutes(
+	ctx context.Context,
 	mw *middleware.Middleware,
-	commonController controller.CommonController,
+	controllers *controllers.Controllers,
 ) {
 	docs.SwaggerInfo.Host = s.config.ApiAddr
 
@@ -21,7 +23,12 @@ func (s *Server) applyRoutes(
 
 	apiV1Router.Get("/swagger/*", swagger.HandlerDefault)
 
-	apiV1Router.Get("/health-check", commonController.HealthCheck())
+	apiV1Router.Get("/health-check", controllers.Common().HealthCheck())
+	apiV1Router.Post("/send", controllers.Sender().Send())
+
+	wsRouter := apiV1Router.Group("/ws", mw.Websocket())
+
+	wsRouter.Get("/:id", controllers.Device().Connect(ctx))
 
 	s.app.Use(func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNotFound) // => 404 "Not Found"

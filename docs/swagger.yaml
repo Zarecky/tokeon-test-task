@@ -1,5 +1,14 @@
 definitions:
-  internal_controller.healthCheckResponse:
+  internal_controllers.SendBodyDto:
+    properties:
+      device_id:
+        type: string
+      text:
+        type: string
+    required:
+    - text
+    type: object
+  internal_controllers.healthCheckResponse:
     properties:
       message:
         type: string
@@ -18,8 +27,48 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_controller.healthCheckResponse'
+            $ref: '#/definitions/internal_controllers.healthCheckResponse'
       summary: health check
       tags:
       - common
+  /api/v1/send:
+    post:
+      consumes:
+      - application/json
+      description: send message to the device with id in body or to lthe all devices
+        if id is not provided in body
+      parameters:
+      - description: Data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_controllers.SendBodyDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: send message to the devices
+      tags:
+      - sender
+  /api/v1/ws/{id}:
+    get:
+      consumes:
+      - application/json
+      description: open connect via websocket
+      parameters:
+      - description: Unique id of the connecting device
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: open connect via websocket
+      tags:
+      - device
 swagger: "2.0"

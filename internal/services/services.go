@@ -2,26 +2,20 @@ package services
 
 import (
 	"tokeon-test-task/internal/config"
-	"tokeon-test-task/internal/repos"
-	"tokeon-test-task/internal/services/user"
-	"tokeon-test-task/pkg/cache"
+	"tokeon-test-task/internal/services/device"
 	"tokeon-test-task/pkg/log"
 )
 
-type Services interface {
-	User() user.Service
+type Services struct {
+	deviceService *device.Service
 }
 
-type services struct {
-	userService user.Service
-}
-
-func New(logger log.Logger, config *config.Config, repos repos.Repos, cache cache.Cache) (Services, error) {
-	return &services{
-		userService: user.NewService(config, logger, repos.Users(), cache),
+func New(logger log.Logger, config *config.Config) (*Services, error) {
+	return &Services{
+		deviceService: device.New(),
 	}, nil
 }
 
-func (s *services) User() user.Service {
-	return s.userService
+func (s *Services) Device() *device.Service {
+	return s.deviceService
 }
