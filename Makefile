@@ -15,7 +15,6 @@ ifeq ($(GOPATH),)
 GOBIN ?=$(GOBIN)
 endif
 
-
 .PHONY: start
 start:
 	go run ./cmd/app/main.go
@@ -37,22 +36,6 @@ watch: ## Run binaries that rebuild themselves on changes
 
 genswagger:
 	swag init -g /cmd/app/main.go --parseDependency --parseInternal
-
-compose:
-	docker compose up -d
-
-
-install-tools: # Install tools needed for development
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
-	go install github.com/cosmtrek/air@latest
-	go install github.com/oligot/go-mod-upgrade@latest
-	go install github.com/swaggo/swag/cmd/swag@latest
-	go install github.com/tkcrm/pgxgen/cmd/pgxgen@latest
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-	go install github.com/fullstorydev/grpcui/cmd/grpcui@latest
-
 
 %:
 	@:
